@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASAHI Training</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <h1>ASAHI Training</h1>
+      <p>今日も、ひとつ動こうぜ。</p>
+    </header>
+
+    <section class="asahi-area">
+      <img id="asahiImage" src="images/asahi_normal.png" alt="アサヒ" class="asahi-img" />
+
+      <div class="message-box">
+        <p id="asahiMessage">よし、今日も一緒にやるぞ。</p>
+      </div>
+    </section>
+
+    <section class="menu-area">
+      <div class="menu-title">🔥 今日のメニュー</div>
+
+      <div class="training-grid">
+        <button class="training-card" data-training="face">
+          <span class="icon">🙂</span>
+          <span class="label">顔トレ</span>
+          <span class="count" id="faceCount">0/1</span>
+        </button>
+
+        <button class="training-card" data-training="squat">
+          <span class="icon">🏋️</span>
+          <span class="label">スクワット</span>
+          <span class="count" id="squatCount">0/1</span>
+        </button>
+
+        <button class="training-card" data-training="stretch">
+          <span class="icon">🧘</span>
+          <span class="label">ストレッチ</span>
+          <span class="count" id="stretchCount">0/1</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="status-area">
+      <div class="status-card">
+        <span class="status-label">今日の達成</span>
+        <strong id="todayDone">0 / 3</strong>
+      </div>
+
+      <div class="status-card">
+        <span class="status-label">合計チェック</span>
+        <strong id="totalCount">0</strong>
+      </div>
+    </section>
+
+    <section class="actions">
+      <button id="resetToday" class="sub-button">今日のチェックをリセット</button>
+    </section>
+
+    <section id="rewardModal" class="modal hidden">
+      <div class="modal-content">
+        <img id="rewardImage" src="images/asahi_daisukida.png" alt="アサヒ" class="reward-img" />
+        <h2>アサヒからの言葉</h2>
+        <p id="rewardMessage"></p>
+        <button id="closeReward" class="main-button">ありがとう、アサヒ</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
