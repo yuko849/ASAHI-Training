@@ -50,6 +50,8 @@ const levelRules = [
   { level: 8, need: 25 }
 ];
 
+const levelUpStepAfterRules = 5;
+
 const setMessages = [
   "いいぞ、ユウコ。その一回が、次の旅の足になる。",
   "ちゃんと動いたな。未来のユウコが今のおまえに感謝するぞ。",
@@ -85,39 +87,6 @@ const levelMessages = {
 };
 
 let state = loadState();
-
-// 2026-08-03に消えた記録を一度だけ戻す。
-// 復旧済みの印は別に残すので、「すべてリセット」後に再復旧はしない。
-const recoveryKey = "asahiTrainingRecovery20260803";
-
-function restoreLostProgressOnce() {
-  if (localStorage.getItem(recoveryKey)) return;
-
-  if (state.totalComplete === 0) {
-    state.date = todayKey;
-    state.month = monthKey;
-    state.counts = {
-      squat: 3,
-      puppy: 3,
-      toe: 2
-    };
-    state.monthComplete = 1;
-    state.totalComplete = 27;
-
-    if (!state.completedDates.includes(todayKey)) {
-      state.completedDates.push(todayKey);
-    }
-
-    state.shownLevels = levelRules
-      .filter((rule) => rule.level > 1 && state.totalComplete >= rule.need)
-      .map((rule) => rule.level);
-  }
-
-  localStorage.setItem(recoveryKey, "done");
-  saveState();
-}
-
-restoreLostProgressOnce();
 
 const asahiImage = document.getElementById("asahiImage");
 const asahiMessage = document.getElementById("asahiMessage");
@@ -182,9 +151,7 @@ function loadState() {
   if (typeof parsed.totalComplete !== "number") parsed.totalComplete = 0;
 
   // 旧版から更新した直後に、達成済みレベルの通知を再表示しないための移行処理。
-  const achievedLevels = levelRules
-    .filter((rule) => rule.level > 1 && parsed.totalComplete >= rule.need)
-    .map((rule) => rule.level);
+  const achievedLevels = getAchievedLevels(parsed.totalComplete);
 
   parsed.shownLevels = [...new Set([...parsed.shownLevels, ...achievedLevels])];
 
@@ -210,20 +177,50 @@ function calculateStage() {
   return 0;
 }
 
-function getCurrentLevel() {
-  let current = levelRules[0];
+function getLevelNeed(level) {
+  const rule = levelRules.find((item) => item.level === level);
 
-  for (const rule of levelRules) {
-    if (state.totalComplete >= rule.need) {
-      current = rule;
-    }
+  if (rule) return rule.need;
+
+  const lastRule = levelRules[levelRules.length - 1];
+  return lastRule.need + (level - lastRule.level) * levelUpStepAfterRules;
+}
+
+function getLevelByTotal(totalComplete) {
+  let level = 1;
+
+  while (totalComplete >= getLevelNeed(level + 1)) {
+    level += 1;
   }
 
-  return current;
+  return {
+    level,
+    need: getLevelNeed(level)
+  };
+}
+
+function getAchievedLevels(totalComplete) {
+  const current = getLevelByTotal(totalComplete);
+  const levels = [];
+
+  for (let level = 2; level <= current.level; level += 1) {
+    levels.push(level);
+  }
+
+  return levels;
+}
+
+function getCurrentLevel() {
+  return getLevelByTotal(state.totalComplete);
 }
 
 function getNextLevel() {
-  return levelRules.find((rule) => rule.need > state.totalComplete) || null;
+  const current = getCurrentLevel();
+
+  return {
+    level: current.level + 1,
+    need: getLevelNeed(current.level + 1)
+  };
 }
 
 function updateLevelView() {
@@ -232,12 +229,8 @@ function updateLevelView() {
 
   levelText.textContent = `Lv.${current.level}`;
 
-  if (next) {
-    const remain = next.need - state.totalComplete;
-    nextLevelText.textContent = `次のレベルまであと${remain}回`;
-  } else {
-    nextLevelText.textContent = "累計の最高レベル到達だ。すげぇぞ。";
-  }
+  const remain = next.need - state.totalComplete;
+  nextLevelText.textContent = `次のLv.${next.level}まであと${remain}回`;
 }
 
 function updateButtonState(button, key) {
@@ -313,15 +306,14 @@ function checkLevelUp() {
 
   if (
     current.level > 1 &&
-    !state.shownLevels.includes(current.level) &&
-    levelMessages[current.level]
+    !state.shownLevels.includes(current.level)
   ) {
     state.shownLevels.push(current.level);
     saveState();
 
     showReward(
       "レベルアップ！",
-      levelMessages[current.level],
+      levelMessages[current.level] || `金星レベル Lv.${current.level} だ。\nユウコ、終わりなんてないな。\n今日の一歩も、ちゃんと次の旅につながってる。`,
       images.daisukida
     );
   }
