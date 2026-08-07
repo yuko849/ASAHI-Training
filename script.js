@@ -88,6 +88,33 @@ const levelMessages = {
 
 let state = loadState();
 
+// 2026-08-07: 新しいホーム画面アイコン用の一時復旧。
+// 古いアイコンとは保存場所が分かれるため、0回で始まった時だけ記録を戻す。
+const newIconRecoveryKey = "asahiTrainingNewIconRecovery20260807";
+
+function restoreNewIconProgressOnce() {
+  if (localStorage.getItem(newIconRecoveryKey)) return;
+
+  if (state.totalComplete === 0) {
+    state.date = todayKey;
+    state.month = monthKey;
+    state.counts = {
+      squat: 1,
+      puppy: 1,
+      toe: 1
+    };
+    state.monthComplete = 1;
+    state.totalComplete = 27;
+    state.completedDates = state.completedDates.filter((date) => date !== todayKey);
+    state.shownLevels = getAchievedLevels(state.totalComplete);
+  }
+
+  localStorage.setItem(newIconRecoveryKey, "done");
+  saveState();
+}
+
+restoreNewIconProgressOnce();
+
 const asahiImage = document.getElementById("asahiImage");
 const asahiMessage = document.getElementById("asahiMessage");
 
